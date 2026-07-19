@@ -18,14 +18,14 @@ export default async function LoginPage({
     <div className="mx-auto max-w-md space-y-6">
       <PageHeader
         title="Sign in"
-        description="Signing in attributes your signals, projects, and updates to you."
+        description="This workspace is private to the MPbio commercial team."
       />
       <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
         <LoginForm next={next} />
       </div>
       <p className="text-xs text-neutral-500">
-        You can browse the dashboard and feed without signing in — an account is
-        only needed to add or change data.
+        Signals, projects, and activity are visible to signed-in team members
+        only, and every action is recorded against your name.
       </p>
     </div>
   );

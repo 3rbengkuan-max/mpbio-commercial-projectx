@@ -1,7 +1,12 @@
 -- Sprint 4 — Lock It Down.
--- Replaces the permissive v1 policies with authenticated writes and owner checks.
--- Reads stay public: docs/TASKS.md requires an unauthenticated visitor to still
--- be able to view the dashboard and feed, just not submit anything.
+-- Replaces the permissive v1 policies with authenticated reads and writes.
+--
+-- NOTE ON READS: docs/TASKS.md and docs/TEST_PLAN.md originally called for
+-- unauthenticated visitors to still be able to VIEW the dashboard and feed.
+-- That was overridden by a deliberate decision: this workspace holds competitor
+-- intelligence and named customer accounts, which should not be readable by
+-- anyone who happens to have the URL. Every table below is therefore
+-- `to authenticated`, and the app enforces a matching auth wall in middleware.
 
 -- ── profiles ────────────────────────────────────────────────────────────────
 -- auth.users is not directly readable by the app, so mirror the display name and
@@ -17,7 +22,7 @@ alter table profiles enable row level security;
 
 drop policy if exists "profiles_read" on profiles;
 create policy "profiles_read" on profiles
-  for select using (true);
+  for select to authenticated using (true);
 
 drop policy if exists "profiles_insert_self" on profiles;
 create policy "profiles_insert_self" on profiles
@@ -84,7 +89,7 @@ drop policy if exists "signals_v1_read" on signals;
 drop policy if exists "signals_v1_write" on signals;
 
 create policy "signals_read" on signals
-  for select using (true);
+  for select to authenticated using (true);
 create policy "signals_insert" on signals
   for insert to authenticated with check (auth.uid() = user_id);
 create policy "signals_update" on signals
@@ -97,7 +102,7 @@ drop policy if exists "projects_v1_read" on projects;
 drop policy if exists "projects_v1_write" on projects;
 
 create policy "projects_read" on projects
-  for select using (true);
+  for select to authenticated using (true);
 create policy "projects_insert" on projects
   for insert to authenticated with check (auth.uid() = user_id);
 create policy "projects_update" on projects
@@ -110,7 +115,7 @@ drop policy if exists "activities_v1_read" on activities;
 drop policy if exists "activities_v1_write" on activities;
 
 create policy "activities_read" on activities
-  for select using (true);
+  for select to authenticated using (true);
 create policy "activities_insert" on activities
   for insert to authenticated with check (auth.uid() = user_id);
 create policy "activities_update" on activities
@@ -125,6 +130,6 @@ drop policy if exists "audit_logs_v1_read" on audit_logs;
 drop policy if exists "audit_logs_v1_write" on audit_logs;
 
 create policy "audit_logs_read" on audit_logs
-  for select using (true);
+  for select to authenticated using (true);
 create policy "audit_logs_insert" on audit_logs
   for insert to authenticated with check (auth.uid() = user_id);

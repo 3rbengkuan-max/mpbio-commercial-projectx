@@ -57,11 +57,19 @@
 - [ ] Display logged-in user name in nav and on activity entries
 - [ ] Add role selection on signup (Sales Manager, Business Developer, etc.)
 - [ ] Replace v1 open RLS policies with team-scoped read + owner-write policies
-- [ ] Protect write routes (redirect to login if unauthenticated)
+- [ ] Protect all app routes (redirect to login if unauthenticated)
 - [ ] Dashboard and feed remain readable when logged in
-- [ ] Test: unauthenticated user can view but cannot submit forms
+- [ ] Test: unauthenticated user is redirected to login and RLS returns no rows
 
-**Definition of Done:** Logged-in user's name appears on their submissions. Unauthenticated POST attempts are rejected by RLS. Existing demo rows still visible.
+> **Decision (supersedes the earlier "unauthenticated user can view" test):**
+> reads are gated to authenticated team members, not public. This workspace
+> holds competitor intelligence and named customer accounts, so URL-only access
+> is not acceptable. This matches `SECURITY.md`, which always specified
+> team-scoped read; the earlier public-read wording here and in `TEST_PLAN.md`
+> was the inconsistency. The no-login-wall rule in `CLAUDE.md` applies to v1
+> *before* this sprint — locking down is the point of Sprint 4.
+
+**Definition of Done:** Logged-in user's name appears on their submissions. Unauthenticated reads and writes are rejected by RLS. Existing demo rows still visible to signed-in users.
 
 ---
 

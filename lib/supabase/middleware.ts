@@ -3,11 +3,16 @@ import { NextResponse, type NextRequest } from "next/server";
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
-/** Routes that create data, and so require a signed-in user. */
-const WRITE_ROUTES = ["/signals/new", "/projects/new"];
+/**
+ * The only routes reachable signed out. Everything else — including the
+ * dashboard and feed — requires a session, matching the `to authenticated`
+ * read policies in 0002. An allowlist rather than a blocklist, so a new page
+ * is private by default.
+ */
+const PUBLIC_ROUTES = ["/login", "/signup", "/auth", "/api/health"];
 
-function isWriteRoute(pathname: string): boolean {
-  return WRITE_ROUTES.some(
+function isPublicRoute(pathname: string): boolean {
+  return PUBLIC_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
 }
@@ -50,10 +55,10 @@ export async function updateSession(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    // Reads stay public in v1 — only the write routes are gated. Server actions
-    // and RLS enforce this too; this redirect is just so a signed-out user gets
-    // a login page instead of a form that will fail on submit.
-    if (!user && isWriteRoute(request.nextUrl.pathname)) {
+    // Reads are gated as of Sprint 4: this workspace holds competitor intel and
+    // named accounts. RLS is the real boundary; this redirect just sends a
+    // signed-out visitor to a login page instead of an empty-looking app.
+    if (!user && !isPublicRoute(request.nextUrl.pathname)) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set(
         "next",
