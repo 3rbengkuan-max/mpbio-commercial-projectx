@@ -3,6 +3,15 @@ import { NextResponse, type NextRequest } from "next/server";
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
+/** Routes that create data, and so require a signed-in user. */
+const WRITE_ROUTES = ["/signals/new", "/projects/new"];
+
+function isWriteRoute(pathname: string): boolean {
+  return WRITE_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  );
+}
+
 export async function updateSession(request: NextRequest) {
   const supabaseResponse = NextResponse.next({ request });
 
@@ -37,7 +46,22 @@ export async function updateSession(request: NextRequest) {
     });
 
     // Refresh session so it doesn't expire while user is active
-    await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    // Reads stay public in v1 — only the write routes are gated. Server actions
+    // and RLS enforce this too; this redirect is just so a signed-out user gets
+    // a login page instead of a form that will fail on submit.
+    if (!user && isWriteRoute(request.nextUrl.pathname)) {
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set(
+        "next",
+        request.nextUrl.pathname + request.nextUrl.search,
+      );
+      return NextResponse.redirect(loginUrl);
+    }
+
     return response;
   } catch {
     // Never let an auth hiccup crash the entire edge middleware

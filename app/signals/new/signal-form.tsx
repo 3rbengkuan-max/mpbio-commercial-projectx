@@ -99,19 +99,6 @@ export function SignalForm() {
         <textarea id="summary" name="summary" rows={5} className={inputClass} />
       </Field>
 
-      <Field
-        label="Logged by"
-        htmlFor="actor_name"
-        hint="Recorded on the audit trail."
-      >
-        <input
-          id="actor_name"
-          name="actor_name"
-          className={inputClass}
-          placeholder="Your name"
-        />
-      </Field>
-
       <div className="flex items-center gap-3 border-t border-neutral-200 pt-5">
         <SubmitButton pendingLabel="Logging signal…">Log signal</SubmitButton>
         <Link

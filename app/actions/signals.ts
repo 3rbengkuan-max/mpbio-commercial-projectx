@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import { writeAudit } from "@/lib/audit";
 import {
   EMPTY_FORM_STATE,
@@ -33,7 +34,13 @@ export async function createSignal(
   const sourceName = str(formData, "source_name");
   const signalDate = str(formData, "signal_date");
   const summary = str(formData, "summary");
-  const actorName = str(formData, "actor_name");
+
+  // Attribution now comes from the session, not a free-text field the
+  // submitter controls (docs/TASKS.md Sprint 4).
+  const user = await getCurrentUser();
+  if (!user) {
+    return { ok: false, error: "You must be signed in to log a signal." };
+  }
 
   const fieldErrors: Record<string, string> = {};
   if (!title) fieldErrors.title = "Title is required.";
@@ -55,6 +62,7 @@ export async function createSignal(
   const { data, error } = await supabase
     .from("signals")
     .insert({
+      user_id: user.id,
       title,
       source_url: nullable(sourceUrl),
       source_name: nullable(sourceName),
@@ -75,7 +83,8 @@ export async function createSignal(
   }
 
   await writeAudit(supabase, {
-    actorName: nullable(actorName),
+    userId: user.id,
+    actorName: user.fullName,
     action: "signal.created",
     targetTable: "signals",
     targetId: data.id,
@@ -104,7 +113,11 @@ export async function updateSignalStatus(
 ): Promise<FormState> {
   const id = str(formData, "id");
   const status = str(formData, "status");
-  const actorName = str(formData, "actor_name");
+
+  const user = await getCurrentUser();
+  if (!user) {
+    return { ok: false, error: "You must be signed in to change a status." };
+  }
 
   if (!id) return { ok: false, error: "Missing signal id." };
   if (!SIGNAL_STATUSES.includes(status as never))
@@ -118,17 +131,28 @@ export async function updateSignalStatus(
     .eq("id", id)
     .single();
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("signals")
     .update({ status })
-    .eq("id", id);
+    .eq("id", id)
+    .select("id");
 
   if (error) {
     return { ok: false, error: `Could not update status: ${error.message}` };
   }
 
+  // RLS returns success with zero rows when the policy blocks the update, so
+  // an empty result means "not allowed", not "nothing to do".
+  if (!updated || updated.length === 0) {
+    return {
+      ok: false,
+      error: "You do not have permission to change this signal.",
+    };
+  }
+
   await writeAudit(supabase, {
-    actorName: nullable(actorName),
+    userId: user.id,
+    actorName: user.fullName,
     action: "signal.status_changed",
     targetTable: "signals",
     targetId: id,
@@ -146,7 +170,12 @@ export async function deleteSignal(
   formData: FormData,
 ): Promise<FormState> {
   const id = str(formData, "id");
-  const actorName = str(formData, "actor_name");
+
+  const user = await getCurrentUser();
+  if (!user) {
+    return { ok: false, error: "You must be signed in to delete a signal." };
+  }
+
   if (!id) return { ok: false, error: "Missing signal id." };
 
   const supabase = await createClient();
@@ -173,13 +202,26 @@ export async function deleteSignal(
     };
   }
 
-  const { error } = await supabase.from("signals").delete().eq("id", id);
+  const { data: deleted, error } = await supabase
+    .from("signals")
+    .delete()
+    .eq("id", id)
+    .select("id");
+
   if (error) {
     return { ok: false, error: `Could not delete the signal: ${error.message}` };
   }
 
+  if (!deleted || deleted.length === 0) {
+    return {
+      ok: false,
+      error: "You do not have permission to delete this signal.",
+    };
+  }
+
   await writeAudit(supabase, {
-    actorName: nullable(actorName),
+    userId: user.id,
+    actorName: user.fullName,
     action: "signal.deleted",
     targetTable: "signals",
     targetId: id,

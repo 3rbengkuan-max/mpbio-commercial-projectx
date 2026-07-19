@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import { writeAudit } from "@/lib/audit";
 import {
   EMPTY_FORM_STATE,
@@ -31,7 +32,11 @@ export async function createProject(
   const ownerRole = str(formData, "owner_role");
   const priority = str(formData, "priority");
   const dueDate = str(formData, "due_date");
-  const actorName = str(formData, "actor_name");
+
+  const user = await getCurrentUser();
+  if (!user) {
+    return { ok: false, error: "You must be signed in to create a project." };
+  }
 
   const fieldErrors: Record<string, string> = {};
   if (!title) fieldErrors.title = "Title is required.";
@@ -64,6 +69,7 @@ export async function createProject(
   const { data, error } = await supabase
     .from("projects")
     .insert({
+      user_id: user.id,
       title,
       description: nullable(description),
       signal_id: signalId,
@@ -84,7 +90,8 @@ export async function createProject(
   }
 
   await writeAudit(supabase, {
-    actorName: nullable(actorName) ?? ownerName,
+    userId: user.id,
+    actorName: user.fullName,
     action: "project.created",
     targetTable: "projects",
     targetId: data.id,
@@ -117,8 +124,12 @@ export async function updateProjectStatus(
 ): Promise<FormState> {
   const id = str(formData, "id");
   const status = str(formData, "status");
-  const actorName = str(formData, "actor_name");
   const outcome = str(formData, "outcome");
+
+  const user = await getCurrentUser();
+  if (!user) {
+    return { ok: false, error: "You must be signed in to change a status." };
+  }
 
   if (!id) return { ok: false, error: "Missing project id." };
   if (!PROJECT_STATUSES.includes(status as never))
@@ -139,17 +150,28 @@ export async function updateProjectStatus(
   const update: Record<string, unknown> = { status };
   if (outcome) update.outcome = outcome;
 
-  const { error } = await supabase.from("projects").update(update).eq("id", id);
+  const { data: updated, error } = await supabase
+    .from("projects")
+    .update(update)
+    .eq("id", id)
+    .select("id");
 
   if (error) {
     return { ok: false, error: `Could not update status: ${error.message}` };
   }
 
-  const actor = nullable(actorName) ?? before?.owner_name ?? null;
+  if (!updated || updated.length === 0) {
+    return {
+      ok: false,
+      error: "You do not have permission to change this project.",
+    };
+  }
 
   await supabase.from("activities").insert({
+    user_id: user.id,
     project_id: id,
-    actor_name: actor,
+    actor_name: user.fullName,
+    actor_role: user.role,
     action_type: "status_change",
     note: `Status changed from ${before?.status ?? "unknown"} to ${status}.`,
     status_change_from: before?.status ?? null,
@@ -157,7 +179,8 @@ export async function updateProjectStatus(
   });
 
   await writeAudit(supabase, {
-    actorName: actor,
+    userId: user.id,
+    actorName: user.fullName,
     action: "project.status_changed",
     targetTable: "projects",
     targetId: id,
@@ -178,7 +201,12 @@ export async function deleteProject(
   formData: FormData,
 ): Promise<FormState> {
   const id = str(formData, "id");
-  const actorName = str(formData, "actor_name");
+
+  const user = await getCurrentUser();
+  if (!user) {
+    return { ok: false, error: "You must be signed in to delete a project." };
+  }
+
   if (!id) return { ok: false, error: "Missing project id." };
 
   const supabase = await createClient();
@@ -202,13 +230,26 @@ export async function deleteProject(
     };
   }
 
-  const { error } = await supabase.from("projects").delete().eq("id", id);
+  const { data: deleted, error } = await supabase
+    .from("projects")
+    .delete()
+    .eq("id", id)
+    .select("id");
+
   if (error) {
     return { ok: false, error: `Could not delete the project: ${error.message}` };
   }
 
+  if (!deleted || deleted.length === 0) {
+    return {
+      ok: false,
+      error: "You do not have permission to delete this project.",
+    };
+  }
+
   await writeAudit(supabase, {
-    actorName: nullable(actorName),
+    userId: user.id,
+    actorName: user.fullName,
     action: "project.deleted",
     targetTable: "projects",
     targetId: id,

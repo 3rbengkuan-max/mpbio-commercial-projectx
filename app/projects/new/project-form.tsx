@@ -127,19 +127,6 @@ export function ProjectForm({
         </Field>
       </div>
 
-      <Field
-        label="Created by"
-        htmlFor="actor_name"
-        hint="Recorded on the audit trail. Defaults to the owner."
-      >
-        <input
-          id="actor_name"
-          name="actor_name"
-          className={inputClass}
-          placeholder="Your name"
-        />
-      </Field>
-
       <div className="flex items-center gap-3 border-t border-neutral-200 pt-5">
         <SubmitButton pendingLabel="Creating project…">
           Create project

@@ -10,6 +10,8 @@ import {
   SignalTypeBadge,
   StatusBadge,
 } from "@/app/components/ui";
+import { getCurrentUser } from "@/lib/auth";
+import { SignInPrompt } from "@/app/components/sign-in-prompt";
 import { ActivityForm } from "./activity-form";
 import { ProjectControls } from "./project-controls";
 
@@ -22,6 +24,7 @@ export default async function ProjectDetailPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
+  const currentUser = await getCurrentUser();
 
   const { data: project, error } = await supabase
     .from("projects")
@@ -128,7 +131,11 @@ export default async function ProjectDetailPage({
               Add an update
             </h2>
             <div className="mt-4">
-              <ActivityForm projectId={typedProject.id} />
+              {currentUser ? (
+                <ActivityForm projectId={typedProject.id} />
+              ) : (
+                <SignInPrompt action="add an update to this project" />
+              )}
             </div>
           </div>
 
@@ -184,10 +191,21 @@ export default async function ProjectDetailPage({
         </div>
 
         <div className="space-y-6">
-          <ProjectControls
-            projectId={typedProject.id}
-            currentStatus={typedProject.status}
-          />
+          {currentUser ? (
+            <ProjectControls
+              projectId={typedProject.id}
+              currentStatus={typedProject.status}
+            />
+          ) : (
+            <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+              <h3 className="text-sm font-semibold text-neutral-900">
+                Manage project
+              </h3>
+              <div className="mt-3">
+                <SignInPrompt action="change the status or delete this project" />
+              </div>
+            </div>
+          )}
 
           <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
             <h3 className="text-sm font-semibold text-neutral-900">

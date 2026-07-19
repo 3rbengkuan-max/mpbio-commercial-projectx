@@ -11,6 +11,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export async function writeAudit(
   supabase: SupabaseClient,
   entry: {
+    /** Required: the audit_logs insert policy checks auth.uid() = user_id. */
+    userId: string;
     actorName: string | null;
     action: string;
     targetTable: string;
@@ -19,6 +21,7 @@ export async function writeAudit(
   },
 ): Promise<void> {
   const { error } = await supabase.from("audit_logs").insert({
+    user_id: entry.userId,
     actor_name: entry.actorName,
     action: entry.action,
     target_table: entry.targetTable,

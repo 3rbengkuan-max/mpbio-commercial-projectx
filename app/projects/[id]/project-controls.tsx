@@ -75,21 +75,6 @@ export function ProjectControls({
           </div>
         )}
 
-        <div>
-          <label
-            htmlFor="status_actor"
-            className="block text-xs font-medium text-neutral-600"
-          >
-            Your name
-          </label>
-          <input
-            id="status_actor"
-            name="actor_name"
-            className={`mt-1 ${inputClass}`}
-            placeholder="For the audit trail"
-          />
-        </div>
-
         {needsConfirm && (
           <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">
             Dropping a project is irreversible. It stays visible but is closed
@@ -112,11 +97,6 @@ export function ProjectControls({
             <p className="text-xs text-neutral-600">
               Delete this project and all its updates? This cannot be undone.
             </p>
-            <input
-              name="actor_name"
-              className={inputClass}
-              placeholder="Your name"
-            />
             <div className="flex items-center gap-2">
               <SubmitButton pendingLabel="Deleting…">
                 Yes, delete it

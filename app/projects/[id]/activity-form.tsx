@@ -2,12 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { createActivity } from "@/app/actions/activities";
-import {
-  ACTION_TYPES,
-  EMPTY_FORM_STATE,
-  NOTE_MAX_LENGTH,
-  TEAM_ROLES,
-} from "@/lib/types";
+import { ACTION_TYPES, EMPTY_FORM_STATE, NOTE_MAX_LENGTH } from "@/lib/types";
 import { titleCase } from "@/lib/format";
 import { Field, FormError, SubmitButton, inputClass } from "@/app/components/form";
 
@@ -33,47 +28,20 @@ export function ActivityForm({ projectId }: { projectId: string }) {
       <input type="hidden" name="project_id" value={projectId} />
       <FormError message={state.error} />
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Field label="Your name" htmlFor="actor_name" required error={fe.actor_name}>
-          <input
-            id="actor_name"
-            name="actor_name"
-            className={inputClass}
-            placeholder="e.g. James Lim"
-          />
-        </Field>
-
-        <Field label="Your role" htmlFor="actor_role">
-          <select
-            id="actor_role"
-            name="actor_role"
-            defaultValue=""
-            className={inputClass}
-          >
-            <option value="">Select…</option>
-            {TEAM_ROLES.map((r) => (
-              <option key={r} value={r}>
-                {r}
-              </option>
-            ))}
-          </select>
-        </Field>
-
-        <Field label="Update type" htmlFor="action_type" error={fe.action_type}>
-          <select
-            id="action_type"
-            name="action_type"
-            defaultValue="comment"
-            className={inputClass}
-          >
-            {ACTION_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {titleCase(t)}
-              </option>
-            ))}
-          </select>
-        </Field>
-      </div>
+      <Field label="Update type" htmlFor="action_type" error={fe.action_type}>
+        <select
+          id="action_type"
+          name="action_type"
+          defaultValue="comment"
+          className={inputClass}
+        >
+          {ACTION_TYPES.map((t) => (
+            <option key={t} value={t}>
+              {titleCase(t)}
+            </option>
+          ))}
+        </select>
+      </Field>
 
       <Field label="Note" htmlFor="note" required error={fe.note}>
         <textarea

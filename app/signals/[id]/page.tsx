@@ -11,6 +11,8 @@ import {
   StatusBadge,
 } from "@/app/components/ui";
 import { ProjectCard } from "@/app/components/project-card";
+import { getCurrentUser } from "@/lib/auth";
+import { SignInPrompt } from "@/app/components/sign-in-prompt";
 import { SignalControls } from "./signal-controls";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +24,7 @@ export default async function SignalDetailPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
+  const currentUser = await getCurrentUser();
 
   const { data: signal, error } = await supabase
     .from("signals")
@@ -137,11 +140,22 @@ export default async function SignalDetailPage({
         </div>
 
         <div>
-          <SignalControls
-            signalId={typedSignal.id}
-            currentStatus={typedSignal.status}
-            linkedProjectCount={projects.length}
-          />
+          {currentUser ? (
+            <SignalControls
+              signalId={typedSignal.id}
+              currentStatus={typedSignal.status}
+              linkedProjectCount={projects.length}
+            />
+          ) : (
+            <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+              <h3 className="text-sm font-semibold text-neutral-900">
+                Manage signal
+              </h3>
+              <div className="mt-3">
+                <SignInPrompt action="change the status or delete this signal" />
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
 import { NavLinks } from "./components/nav-links";
+import { UserMenu } from "./components/user-menu";
 
 export const metadata: Metadata = {
   title: "MPbio Commercial Intelligence",
@@ -28,6 +29,7 @@ export default function RootLayout({
               </span>
             </Link>
             <NavLinks />
+            <UserMenu />
           </div>
         </header>
         <main className="mx-auto max-w-6xl px-6 py-8">{children}</main>

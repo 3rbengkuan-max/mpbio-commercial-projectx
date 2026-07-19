@@ -54,21 +54,6 @@ export function SignalControls({
           </select>
         </div>
 
-        <div>
-          <label
-            htmlFor="signal_status_actor"
-            className="block text-xs font-medium text-neutral-600"
-          >
-            Your name
-          </label>
-          <input
-            id="signal_status_actor"
-            name="actor_name"
-            className={`mt-1 ${inputClass}`}
-            placeholder="For the audit trail"
-          />
-        </div>
-
         <SubmitButton pendingLabel="Updating…">Update status</SubmitButton>
 
         {statusState.ok && !statusState.error && (
@@ -89,11 +74,6 @@ export function SignalControls({
             <p className="text-xs text-neutral-600">
               Delete this signal? This cannot be undone.
             </p>
-            <input
-              name="actor_name"
-              className={inputClass}
-              placeholder="Your name"
-            />
             <div className="flex items-center gap-2">
               <SubmitButton pendingLabel="Deleting…">
                 Yes, delete it

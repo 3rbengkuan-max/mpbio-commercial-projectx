@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import { writeAudit } from "@/lib/audit";
 import {
   ACTION_TYPES,
@@ -24,14 +25,18 @@ export async function createActivity(
   formData: FormData,
 ): Promise<FormState> {
   const projectId = str(formData, "project_id");
-  const actorName = str(formData, "actor_name");
-  const actorRole = str(formData, "actor_role");
   const actionType = str(formData, "action_type");
   const note = str(formData, "note");
 
+  // Identity comes from the session — an update can no longer be attributed to
+  // someone the submitter typed in (docs/TASKS.md Sprint 4).
+  const user = await getCurrentUser();
+  if (!user) {
+    return { ok: false, error: "You must be signed in to add an update." };
+  }
+
   const fieldErrors: Record<string, string> = {};
   if (!projectId) return { ok: false, error: "Missing project id." };
-  if (!actorName) fieldErrors.actor_name = "Who is logging this update?";
   if (!note) fieldErrors.note = "Add a note describing the update.";
   else if (note.length > NOTE_MAX_LENGTH)
     fieldErrors.note = `Note is ${note.length} characters — the limit is ${NOTE_MAX_LENGTH}.`;
@@ -59,10 +64,11 @@ export async function createActivity(
   const { data, error } = await supabase
     .from("activities")
     .insert({
+      user_id: user.id,
       project_id: projectId,
       signal_id: project.signal_id,
-      actor_name: actorName,
-      actor_role: nullable(actorRole),
+      actor_name: user.fullName,
+      actor_role: user.role,
       action_type: actionType || "comment",
       note,
     })
@@ -77,15 +83,16 @@ export async function createActivity(
   }
 
   await writeAudit(supabase, {
-    actorName,
+    userId: user.id,
+    actorName: user.fullName,
     action: "activity.created",
     targetTable: "activities",
     targetId: data.id,
     detail: {
       after: {
         project_id: projectId,
-        actor_name: actorName,
-        actor_role: actorRole || null,
+        actor_name: user.fullName,
+        actor_role: user.role,
         action_type: actionType || "comment",
         note,
       },
@@ -103,7 +110,12 @@ export async function deleteActivity(
 ): Promise<FormState> {
   const id = str(formData, "id");
   const projectId = str(formData, "project_id");
-  const actorName = str(formData, "actor_name");
+
+  const user = await getCurrentUser();
+  if (!user) {
+    return { ok: false, error: "You must be signed in to delete an update." };
+  }
+
   if (!id) return { ok: false, error: "Missing activity id." };
 
   const supabase = await createClient();
@@ -114,13 +126,26 @@ export async function deleteActivity(
     .eq("id", id)
     .single();
 
-  const { error } = await supabase.from("activities").delete().eq("id", id);
+  const { data: deleted, error } = await supabase
+    .from("activities")
+    .delete()
+    .eq("id", id)
+    .select("id");
+
   if (error) {
     return { ok: false, error: `Could not delete the update: ${error.message}` };
   }
 
+  if (!deleted || deleted.length === 0) {
+    return {
+      ok: false,
+      error: "You do not have permission to delete this update.",
+    };
+  }
+
   await writeAudit(supabase, {
-    actorName: nullable(actorName),
+    userId: user.id,
+    actorName: user.fullName,
     action: "activity.deleted",
     targetTable: "activities",
     targetId: id,

@@ -91,6 +91,11 @@ export type FormState = {
   error?: string;
   /** Field-level validation messages, keyed by form field name. */
   fieldErrors?: Record<string, string>;
+  /**
+   * Set by signUp when Supabase has email confirmation enabled: the account
+   * exists but there is no session yet, so the user must click the email link.
+   */
+  needsEmailConfirmation?: boolean;
 };
 
 export const EMPTY_FORM_STATE: FormState = { ok: false };
