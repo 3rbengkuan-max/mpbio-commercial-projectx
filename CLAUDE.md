@@ -42,14 +42,30 @@ build the wrong thing (e.g. a marketing landing page). Open the plan and build f
 - **Deploy by git, never by CLI.** `git add -A && git commit -m "…" && git push` to `main`;
   Vercel auto-deploys from GitHub. Do NOT run `vercel deploy` / `vercel --prod` with local
   files — it desyncs git, and the next push silently overwrites your live app.
+- **Confirm the Vercel project is actually connected to GitHub.** Auto-deploy only works if a
+  Git repository is linked. `vercel project inspect <name>` shows no Git section when it is not,
+  and pushes then land on GitHub while the live site silently stays on an old build. A project
+  created with `vercel link` from the CLI is NOT connected by default — connect it in the
+  dashboard under Settings → Git. After pushing, verify with `vercel ls` that a new deployment
+  appeared; if the newest one predates your commit, nothing deployed.
 - **Commit + push every change.** Git is the source of truth; uncommitted work is lost on
   the next deploy.
 - **The Supabase database is already provisioned** and its keys are in this project's Vercel
   env. Pull them locally: `vercel link` then `vercel env pull .env.local`. Don't invent new ones.
-- **Your database is already set up.** The schema from your data model has been applied to
-  this project's Supabase database and committed at `supabase/migrations/0001_init.sql`. Build on
-  the existing tables — **do not recreate them**. To change the schema, add a NEW migration file
-  (`supabase/migrations/0002_*.sql`) and apply it; never edit `0001`.
+- **Verify the database before assuming it is set up.** The schema lives at
+  `supabase/migrations/0001_init.sql`, but a committed migration does NOT mean it has been
+  applied — check first:
+  ```
+  curl -s -o /dev/null -w "%{http_code}" \
+    "$NEXT_PUBLIC_SUPABASE_URL/rest/v1/signals?select=id&limit=1" \
+    -H "apikey: $NEXT_PUBLIC_SUPABASE_ANON_KEY"
+  ```
+  `200` means applied; `404` means the tables do not exist yet. If it returns `404`, paste the
+  contents of `0001_init.sql` into the Supabase dashboard → SQL Editor → Run. There is no DB
+  password or service-role key in the Vercel env, so the anon key cannot run DDL and the
+  migration cannot be applied from the command line.
+  Once applied, build on the existing tables — **do not recreate them**. To change the schema,
+  add a NEW migration file (`supabase/migrations/0002_*.sql`) and apply it; never edit `0001`.
 - **Commit as your GitHub identity, or Vercel will block the deploy.** Vercel verifies that
   every commit's author email belongs to your GitHub account. Your machine's default git email
   often isn't, so the very first local commit gets rejected. Pin this repo's identity once
@@ -61,6 +77,6 @@ build the wrong thing (e.g. a marketing landing page). Open the plan and build f
 
 Kickoff prompt: "Read everything in /docs, confirm the plan in 3 lines, then build straight
 through the sprints until the app actually works end-to-end — the PRD's success scenario, not
-just auth + an empty dashboard. The schema is already applied, so pull env with vercel env pull
-and build on the existing tables; commit + push after each sprint to deploy. Stop only when a
-real user can do the core job."
+just auth + an empty dashboard. Pull env with vercel env pull, check whether the migration in
+supabase/migrations has actually been applied and apply it if not, then build on those tables;
+commit + push after each sprint to deploy. Stop only when a real user can do the core job."
