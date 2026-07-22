@@ -106,3 +106,25 @@ export const EMPTY_FORM_STATE: FormState = { ok: false };
 
 /** docs/TEST_PLAN.md: activity notes are capped so the UI can warn before submit. */
 export const NOTE_MAX_LENGTH = 2000;
+
+/** A candidate signal drafted by web research, before a human imports it. */
+export type ResearchDraft = {
+  title: string;
+  category: string;
+  signal_type: string;
+  source_name: string | null;
+  source_url: string | null;
+  signal_date: string | null;
+  summary: string | null;
+};
+
+/** Return shape of the research action (drafts to review, not yet saved). */
+export type ResearchState = {
+  ok: boolean;
+  error?: string;
+  drafts?: ResearchDraft[];
+  /** How many searches the model ran — shown so the run feels grounded. */
+  searchCount?: number;
+};
+
+export const EMPTY_RESEARCH_STATE: ResearchState = { ok: false };

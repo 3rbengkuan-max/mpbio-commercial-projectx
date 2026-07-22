@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Signal } from "@/lib/types";
+import Link from "next/link";
 import { EmptyState, ErrorState, PageHeader, PrimaryLink } from "../components/ui";
 import { SignalCard } from "../components/signal-card";
 import { SignalFilters } from "../components/signal-filters";
@@ -45,7 +46,17 @@ export default async function SignalsPage({
       <PageHeader
         title="Signal feed"
         description="Market events captured by the commercial team — newest first."
-        action={<PrimaryLink href="/signals/new">Log signal</PrimaryLink>}
+        action={
+          <div className="flex items-center gap-2">
+            <Link
+              href="/signals/research"
+              className="inline-flex items-center gap-1.5 rounded-md border border-neutral-300 bg-white px-3.5 py-2 text-sm font-medium text-neutral-700 shadow-sm hover:bg-neutral-50"
+            >
+              ⌕ Research signals
+            </Link>
+            <PrimaryLink href="/signals/new">Log signal</PrimaryLink>
+          </div>
+        }
       />
 
       <SignalFilters />
