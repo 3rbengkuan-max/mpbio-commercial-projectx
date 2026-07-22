@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Activity, Project, Signal } from "@/lib/types";
 import { formatDateTime, relativeTime, titleCase } from "@/lib/format";
 import { PROJECT_STATUSES } from "@/lib/types";
-import { CategoryBadge, SignalTypeBadge, StatusBadge } from "./ui";
+import { CategoryBadge, OriginBadge, SignalTypeBadge, StatusBadge } from "./ui";
 
 export function CountCard({
   label,
@@ -145,6 +145,7 @@ export function SignalPreviewRow({ signal }: { signal: Signal }) {
       <div className="flex flex-wrap items-center gap-1.5">
         <CategoryBadge value={signal.category} />
         <SignalTypeBadge value={signal.signal_type} />
+        <OriginBadge value={signal.origin} />
         <span className="ml-auto text-xs text-neutral-400">
           {relativeTime(signal.created_at)}
         </span>

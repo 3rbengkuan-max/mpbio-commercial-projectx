@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Signal } from "@/lib/types";
 import { formatDate, relativeTime } from "@/lib/format";
-import { CategoryBadge, SignalTypeBadge } from "./ui";
+import { CategoryBadge, OriginBadge, SignalTypeBadge } from "./ui";
 
 export function SignalCard({
   signal,
@@ -18,6 +18,7 @@ export function SignalCard({
       <div className="flex flex-wrap items-center gap-2">
         <CategoryBadge value={signal.category} />
         <SignalTypeBadge value={signal.signal_type} />
+        <OriginBadge value={signal.origin} />
         <span className="ml-auto text-xs text-neutral-400">
           {relativeTime(signal.created_at)}
         </span>

@@ -24,6 +24,9 @@ export const PROJECT_PRIORITIES = ["high", "medium", "low"] as const;
 
 export const ACTION_TYPES = ["comment", "status_change", "assignment"] as const;
 
+/** Where a signal came from: a team member, or web research. */
+export const SIGNAL_ORIGINS = ["team", "research"] as const;
+
 export const TEAM_ROLES = [
   "Sales Manager",
   "Business Developer",
@@ -54,6 +57,7 @@ export type Signal = {
   ai_relevance_score: number | null;
   ai_suggested_category: string | null;
   status: string | null;
+  origin: string | null;
 };
 
 export type Project = {

@@ -15,6 +15,7 @@ export function SignalFilters() {
 
   const category = searchParams.get("category") ?? "";
   const type = searchParams.get("type") ?? "";
+  const origin = searchParams.get("origin") ?? "";
 
   function setParam(key: string, value: string) {
     const next = new URLSearchParams(searchParams.toString());
@@ -58,7 +59,18 @@ export function SignalFilters() {
         ))}
       </select>
 
-      {(category || type) && (
+      <select
+        aria-label="Filter by source"
+        value={origin}
+        onChange={(e) => setParam("origin", e.target.value)}
+        className="rounded-md border-0 bg-neutral-50 py-1.5 pl-2.5 pr-8 text-sm text-neutral-900 ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-neutral-900"
+      >
+        <option value="">Any source</option>
+        <option value="team">Logged by team</option>
+        <option value="research">From research</option>
+      </select>
+
+      {(category || type || origin) && (
         <button
           type="button"
           onClick={() => router.push(pathname, { scroll: false })}

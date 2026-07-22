@@ -6,6 +6,7 @@ import { formatDate } from "@/lib/format";
 import {
   CategoryBadge,
   ErrorState,
+  OriginBadge,
   PrimaryLink,
   SignalTypeBadge,
   StatusBadge,
@@ -61,6 +62,7 @@ export default async function SignalDetailPage({
               <CategoryBadge value={typedSignal.category} />
               <SignalTypeBadge value={typedSignal.signal_type} />
               <StatusBadge value={typedSignal.status} />
+              <OriginBadge value={typedSignal.origin} />
             </div>
 
             <h1 className="mt-3 text-xl font-semibold leading-snug tracking-tight text-neutral-900">

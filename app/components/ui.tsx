@@ -20,6 +20,19 @@ export function CategoryBadge({ value }: { value: string | null }) {
   );
 }
 
+/** Where the signal came from — team-logged or research-ingested. */
+export function OriginBadge({ value }: { value: string | null }) {
+  if (value !== "research") return null;
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-md bg-violet-50 px-2 py-0.5 text-xs font-medium text-violet-700 ring-1 ring-inset ring-violet-600/20"
+      title="Ingested from web research"
+    >
+      ⌕ Research
+    </span>
+  );
+}
+
 /** Opportunity vs threat. */
 export function SignalTypeBadge({ value }: { value: string | null }) {
   const isThreat = value === "threat";

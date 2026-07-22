@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function SignalsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; type?: string }>;
+  searchParams: Promise<{ category?: string; type?: string; origin?: string }>;
 }) {
   const params = await searchParams;
   const supabase = await createClient();
@@ -21,6 +21,7 @@ export default async function SignalsPage({
 
   if (params.category) query = query.eq("category", params.category);
   if (params.type) query = query.eq("signal_type", params.type);
+  if (params.origin) query = query.eq("origin", params.origin);
 
   const { data, error } = await query;
   const signals = (data ?? []) as Signal[];
@@ -37,7 +38,7 @@ export default async function SignalsPage({
     }
   }
 
-  const isFiltered = Boolean(params.category || params.type);
+  const isFiltered = Boolean(params.category || params.type || params.origin);
 
   return (
     <div className="space-y-6">

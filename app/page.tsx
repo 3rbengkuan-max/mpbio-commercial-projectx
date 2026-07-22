@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; type?: string }>;
+  searchParams: Promise<{ category?: string; type?: string; origin?: string }>;
 }) {
   const params = await searchParams;
   const supabase = await createClient();
@@ -62,6 +62,7 @@ export default async function DashboardPage({
   const filteredSignals = allSignals.filter((s) => {
     if (params.category && s.category !== params.category) return false;
     if (params.type && s.signal_type !== params.type) return false;
+    if (params.origin && s.origin !== params.origin) return false;
     return true;
   });
 
@@ -80,7 +81,7 @@ export default async function DashboardPage({
   const isEmpty =
     allSignals.length === 0 && projects.length === 0 && activities.length === 0;
 
-  const isFiltered = Boolean(params.category || params.type);
+  const isFiltered = Boolean(params.category || params.type || params.origin);
 
   return (
     <div className="space-y-6">
